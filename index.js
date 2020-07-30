@@ -5,7 +5,7 @@ import mongoose from 'mongoose'
 
 import GQLSchema from './gql/schema.js'
 import Api from './datasource/api.js'
-import { txBlockReducer } from './mongodb/reducer.js'
+import { txBlockReducer, txnReducer } from './mongodb/reducer.js'
 import { TxBlockModel, TxnModel } from './mongodb/model.js'
 import { range } from './util.js'
 
@@ -40,18 +40,34 @@ const loadData = async () => {
 
   for (let i = latestTxBlock; i >= 0; i -= 5) {
     const currRange = [...range(i - 5, i)]
-    const TxBlock = await Promise.all(currRange.map(x => api.getTxBlockWithTxns(x)))
-    const output = TxBlock.map(x => txBlockReducer(x))
-    TxBlockModel.insertMany(output, function (err, result) {
+    const txBlocks = await Promise.all(currRange.map(x => api.getTxBlock(x)))
+    const reducedTxBlocks = txBlocks.map(x => txBlockReducer(x))
+
+    reducedTxBlocks.forEach(async x => {
+      if (x.header.NumTxns === 0) return
+      const txns = await api.getTxnBodiesByTxBlock(x.header.BlockNum)
+      const output = txns.map(x => txnReducer(x))
+      TxnModel.insertMany(output, { ordered: false }, function (err, result) {
+        if (err) {
+          if (err.code === 11000) {
+            console.log('skipping txn')
+          }
+        } else {
+          console.log(result.map(x => x.customId))
+        }
+      })
+    })
+
+    TxBlockModel.insertMany(reducedTxBlocks, { ordered: false }, function (err, result) {
       if (err) {
-        if(err.code !== 11000) {
-          console.log(err)
+        if (err.code === 11000) {
+          console.log('skipping txblock')
         }
       } else {
-        console.log(result.map(x=>x.id))
+        console.log(result.map(x => x.customId))
       }
     })
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise(resolve => setTimeout(resolve, 3000));
   }
 }
 

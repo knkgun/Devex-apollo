@@ -8,15 +8,15 @@ const { getAddressFromPublicKey, toBech32Address } = crypto
 export const txBlockReducer = (txBlock) => {
   return {
     ...txBlock,
-    id: 'txbk_' + txBlock.header.BlockNum,
-    txns: txBlock.txns.map(x => txnReducer(x))
+    customId: 'txbk_' + txBlock.header.BlockNum,
+    txnHashes: txBlock.txnHashes
   }
 }
 
 export const txnReducer = (txn) => {
   return {
     ...txn,
-    id: 'txn_' + txn.ID,
+    customId: 'txn_' + txn.ID,
     toAddr: toBech32Address(txn.toAddr),
     from: toBech32Address(getAddressFromPublicKey(txn.senderPubKey)),
   }

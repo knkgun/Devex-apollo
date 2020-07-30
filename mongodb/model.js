@@ -47,7 +47,14 @@ let TxnReceipt = new Schema({
 })
 
 let Txn = new Schema({
-  ID: String,
+  customId: {
+    type: String,
+    unique: true,
+  },
+  ID: {
+    type: String,
+    unique: true,
+  },
   gasLimit: String,
   nonce: String,
   from: String,
@@ -59,7 +66,10 @@ let Txn = new Schema({
 })
 
 let TxBlockHeader = new Schema({
-  BlockNum: String,
+  BlockNum: {
+    type: String,
+    unique: true,
+  },
   DSBlockNum: String,
   GasLimit: String,
   GasUsed: String,
@@ -88,13 +98,13 @@ let TxBlockBody = new Schema({
 })
 
 let TxBlock = new Schema({
-  id: {
+  customId: {
     type: String,
     unique: true,
   },
   body: TxBlockBody,
   header: TxBlockHeader,
-  txns: [Txn]
+  txnHashes: [String]
 })
 
 export const TxnModel = mongoose.model("TxnModel", Txn)

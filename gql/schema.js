@@ -9,35 +9,68 @@ const customizationOptions = {}
 const TxnTC = composeWithMongoose(TxnModel, customizationOptions)
 const TxBlockTC = composeWithMongoose(TxBlockModel, customizationOptions)
 
+// Resolver to get txns for a TxBlock
+TxBlockTC.addRelation('txns', {
+  resolver: () => TxnTC.getResolver('findByTxBlock'),
+  prepareArgs: {
+    txBlockNum: (source) => {
+      return source.customId.split('_')[1]
+    },
+  },
+  projection: { customId: true },
+})
+
+// Resolver to find txBlock by customId
 TxBlockTC.addResolver({
-  name: 'txnsByAddr',
+  name: 'findByCustomId',
   type: [TxBlockTC],
-  args: { addr: 'String!' },
+  args: { customId: 'String!' },
   resolve: async ({ args, context }) => {
-    const { addr } = args
+    const { customId } = args
     const { models: { TxBlockModel } } = context
-    return TxBlockModel.find().elemMatch('txns', { from: addr })
+    return await TxBlockModel.find({ customId: customId })
   }
 })
 
-TxnTC.addRelation(
-  'belongsTo',
-  {
-    resolver: () => TxBlockTC.get('$findMany'),
-    prepareArgs: {
-      filter: (source) => ({
-        _operators : {
-          ID : { 'in[]': source.txns.map(x=>x.ID) },
-        },
-    }),
-    }
+TxnTC.addResolver({
+  name: 'findByCustomId',
+  type: [TxnTC],
+  args: { customId: 'String!' },
+  resolve: async ({ args, context }) => {
+    const { customId } = args
+    const { models: { TxnModel } } = context
+    return await TxnModel.find({ customId: customId })
   }
-)
+})
+
+TxnTC.addResolver({
+  name: 'findByTxBlock',
+  type: [TxnTC],
+  args: { txBlockNum: 'String!' },
+  resolve: async ({ args, context }) => {
+    const { txBlockNum } = args
+    const { models: { TxnModel } } = context
+    return await TxnModel.find({ "receipt.epoch_num": txBlockNum })
+  }
+})
+
+TxnTC.addResolver({
+  name: 'findByAddr',
+  type: [TxnTC],
+  args: { addr: 'String!' },
+  resolve: async ({ args, context }) => {
+    const { addr } = args
+    const { models: { TxnModel } } = context
+    return await TxnModel.find({ $or: [{ from: addr }, { toAddr: addr }] })
+  }
+})
 
 schemaComposer.Query.addFields({
-  txnsByAddr: TxBlockTC.getResolver('txnsByAddr'),
   txBlocks: TxBlockTC.getResolver('findMany'),
   txns: TxnTC.getResolver('findMany'),
+  txBlocksByCustomId: TxBlockTC.getResolver('findByCustomId'),
+  txnByCustomId: TxnTC.getResolver('findByCustomId'),
+  txnsByAddr: TxnTC.getResolver('findByAddr'),
 })
 
 const GQLSchema = schemaComposer.buildSchema()

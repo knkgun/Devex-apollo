@@ -8,11 +8,6 @@
     "start": "nodemon index.js"
   },
   "dependencies": {
-    "@babel/cli": "^7.10.5",
-    "@babel/core": "^7.10.5",
-    "@babel/node": "^7.10.5",
-    "@babel/preset-env": "^7.10.4",
-    "@babel/register": "^7.10.5",
     "@zilliqa-js/crypto": "^1.0.0-alpha.1",
     "@zilliqa-js/util": "^0.11.1",
     "apollo-datasource-rest": "^0.9.3",
@@ -29,6 +24,12 @@
     "remove": "^0.1.5"
   },
   "devDependencies": {
+    "cz-conventional-changelog": "3.2.0",
     "nodemon": "^2.0.4"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
