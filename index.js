@@ -15,6 +15,8 @@ const { ApolloServer } = apollo
 const app = express()
 app.use(cors())
 
+const api = new Api()
+
 const server = new ApolloServer({
   schema: GQLSchema,
   context: {
@@ -22,13 +24,13 @@ const server = new ApolloServer({
       TxBlockModel,
       TxnModel,
     },
+    api: api
   }
 })
 
 server.applyMiddleware({ app, path: '/graphql' })
 
 // Start crawling TxBlocks and storing into db
-const api = new Api()
 
 mongoose.connect('mongodb://localhost:27017/graphql', { useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true })
 
@@ -40,6 +42,9 @@ const loadData = async () => {
 
   for (let i = latestTxBlock; i >= 0; i -= 5) {
     const currRange = [...range(i - 5, i)]
+    const isCrawled = await currRange.map(x => TxBlockModel.exists({ customId: 'txbk_' + x }))
+      .reduce((acc, x) => acc && x, true)
+    if (isCrawled) continue
     const txBlocks = await Promise.all(currRange.map(x => api.getTxBlock(x)))
     const reducedTxBlocks = txBlocks.map(x => txBlockReducer(x))
 
@@ -47,6 +52,7 @@ const loadData = async () => {
       if (x.header.NumTxns === 0) return
       const txns = await api.getTxnBodiesByTxBlock(x.header.BlockNum)
       const output = txns.map(x => txnReducer(x))
+
       TxnModel.insertMany(output, { ordered: false }, function (err, result) {
         if (err) {
           if (err.code === 11000) {
@@ -67,7 +73,7 @@ const loadData = async () => {
         console.log(result.map(x => x.customId))
       }
     })
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
   }
 }
 

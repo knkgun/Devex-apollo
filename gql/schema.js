@@ -1,6 +1,7 @@
 import graphqlCompose from 'graphql-compose'
 import graphqlComposeMongoose from 'graphql-compose-mongoose'
 import { TxnModel, TxBlockModel } from '../mongodb/model.js'
+import { stripHexPrefix, addHexPrefix } from '../util.js'
 
 const { schemaComposer } = graphqlCompose
 const { composeWithMongoose } = graphqlComposeMongoose
@@ -61,7 +62,14 @@ TxnTC.addResolver({
   resolve: async ({ args, context }) => {
     const { addr } = args
     const { models: { TxnModel } } = context
-    return await TxnModel.find({ $or: [{ from: addr }, { toAddr: addr }] })
+    return await TxnModel.find({
+      $or: [
+        { from: stripHexPrefix(addr) },
+        { toAddr: stripHexPrefix(addr) },
+        { 'receipt.transitions.addr': addHexPrefix(addr) },
+        { 'receipt.transitions.msg._recipient': addHexPrefix(addr) }
+      ]
+    })
   }
 })
 

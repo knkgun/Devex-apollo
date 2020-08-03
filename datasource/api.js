@@ -5,8 +5,11 @@
   1) getLatestTxBlock(): Number
   2) getTxBlock(blockNum: Number): TxBlockObj
   3) getTxnBodiesByTxBlock(blockNum: Number): Array<TransactionObj>
+  4) isContractAddr(addr: String): Boolean
 */
+
 import fetch from 'node-fetch'
+import { stripHexPrefix } from '../util.js'
 
 class Api {
 
@@ -70,6 +73,32 @@ class Api {
     const parsedRes = await response.json()
     return parsedRes.result
   }
+
+  /* Until we find a better way to differentiate an account address from a smart contract address, we will differentiate based
+  on the the response error message if any */
+  async isContractAddr(addr) {
+    const response = await fetch(this.networkUrl,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          "id": "1",
+          "jsonrpc": "2.0",
+          "method": "GetSmartContractInit",
+          "params": [`${stripHexPrefix(addr)}`]
+        }),
+      })
+    const parsedRes = await response.json()
+    if (!parsedRes.error)
+      return true
+    else if (parsedRes.error.message === 'Address not contract address')
+      return false
+    else
+      throw new Error('Invalid Address')
+  }
 }
+
 
 export default Api
