@@ -5,7 +5,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "nodemon -r dotenv/config index.js",
+    "start-prod": "node -r dotenv/config index.js"
   },
   "dependencies": {
     "@zilliqa-js/crypto": "^1.0.0-alpha.1",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "cz-conventional-changelog": "3.2.0",
+    "dotenv": "^8.2.0",
     "nodemon": "^2.0.4"
   },
   "config": {
