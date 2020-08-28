@@ -4,4 +4,5 @@ COPY ./package.json ./
 RUN yarn install
 COPY . ./
 RUN wget https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem
-RUN yarn start
+
+CMD ["bash", "run.sh"]
