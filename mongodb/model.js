@@ -55,15 +55,18 @@ let Txn = new Schema({
     type: String,
     unique: true,
   },
-  gasLimit: String,
-  nonce: String,
-  from: String,
-  toAddr: String,
   amount: String,
-  version: String,
-  signature: String,
+  gasLimit: String,
+  gasPrice: String,
+  nonce: String,
   receipt: TxnReceipt,
-})
+  senderPubKey: String,
+  signature: String,
+  fromAddr: String,
+  toAddr: String,
+  type: String,
+  version: String,
+});
 
 let TxBlockHeader = new Schema({
   BlockNum: {
@@ -107,5 +110,5 @@ let TxBlock = new Schema({
   txnHashes: [String]
 })
 
-export const TxnModel = mongoose.model("TxnModel", Txn)
-export const TxBlockModel = mongoose.model("TxBlockModel", TxBlock)
+export const TxnModel = mongoose.model("txn", Txn)
+export const TxBlockModel = mongoose.model("block", TxBlock)

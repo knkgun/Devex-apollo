@@ -5,12 +5,14 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "start-dev": "NODE_ENV=dev node -r dotenv/config index.js",
     "start": "nodemon -r dotenv/config index.js",
     "start-prod": "node -r dotenv/config index.js"
   },
   "dependencies": {
     "@zilliqa-js/crypto": "^1.0.0-alpha.1",
     "@zilliqa-js/util": "^0.11.1",
+    "@zilliqa-js/zilliqa": "^1.0.0",
     "apollo-datasource-rest": "^0.9.3",
     "apollo-server": "^2.16.0",
     "apollo-server-express": "^2.16.0",

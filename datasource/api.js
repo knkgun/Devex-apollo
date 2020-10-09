@@ -8,97 +8,93 @@
   4) isContractAddr(addr: String): Boolean
 */
 
-import fetch from 'node-fetch'
-import { stripHexPrefix } from '../util.js'
+import fetch from "node-fetch";
+import { stripHexPrefix } from "../util.js";
+
+import zilp from "@zilliqa-js/zilliqa";
+const { Zilliqa } = zilp;
 
 class Api {
-
   constructor() {
-    this.networkUrl = 'https://dev-api.zilliqa.com/'
+    this.networkUrl = "https://dev-api.zilliqa.com/";
+    this.Zilliqa = new Zilliqa(this.networkUrl);
   }
 
   // Get latest tx block number
   async getLatestTxBlock() {
-    const response = await fetch(this.networkUrl,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          "id": "1",
-          "jsonrpc": "2.0",
-          "method": "GetNumTxBlocks",
-          "params": [""]
-        }),
-      })
-    const parsedRes = await response.json()
-    return parsedRes.result
+    const response = await fetch(this.networkUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: "1",
+        jsonrpc: "2.0",
+        method: "GetNumTxBlocks",
+        params: [""],
+      }),
+    });
+    const parsedRes = await response.json();
+    return parsedRes.result;
   }
 
   // Get tx block with transactions
   async getTxBlock(blockNum) {
-    const response = await fetch(this.networkUrl,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          "id": "1",
-          "jsonrpc": "2.0",
-          "method": "GetTxBlock",
-          "params": [`${blockNum}`]
-        }),
-      })
-    const parsedRes = await response.json()
-    return parsedRes.result
+    const response = await fetch(this.networkUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: "1",
+        jsonrpc: "2.0",
+        method: "GetTxBlock",
+        params: [`${blockNum}`],
+      }),
+    });
+    const parsedRes = await response.json();
+    return parsedRes.result;
   }
 
   // Get transaction bodies by tx block
   async getTxnBodiesByTxBlock(blockNum) {
-    const response = await fetch(this.networkUrl,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          "id": "1",
-          "jsonrpc": "2.0",
-          "method": "GetTxnBodiesForTxBlock",
-          "params": [`${blockNum}`]
-        }),
-      })
-    const parsedRes = await response.json()
-    return parsedRes.result
+    const response = await fetch(this.networkUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: "1",
+        jsonrpc: "2.0",
+        method: "GetTxnBodiesForTxBlock",
+        params: [`${blockNum}`],
+      }),
+    });
+    const parsedRes = await response.json();
+    return parsedRes.result;
   }
 
   /* Until we find a better way to differentiate an account address from a smart contract address, we will differentiate based
   on the the response error message if any */
   async isContractAddr(addr) {
-    const response = await fetch(this.networkUrl,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          "id": "1",
-          "jsonrpc": "2.0",
-          "method": "GetSmartContractInit",
-          "params": [`${stripHexPrefix(addr)}`]
-        }),
-      })
-    const parsedRes = await response.json()
-    if (!parsedRes.error)
-      return true
-    else if (parsedRes.error.message === 'Address not contract address')
-      return false
-    else
-      throw new Error('Invalid Address')
+    const response = await fetch(this.networkUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: "1",
+        jsonrpc: "2.0",
+        method: "GetSmartContractInit",
+        params: [`${stripHexPrefix(addr)}`],
+      }),
+    });
+    const parsedRes = await response.json();
+    if (!parsedRes.error) return true;
+    else if (parsedRes.error.message === "Address not contract address")
+      return false;
+    else throw new Error("Invalid Address");
   }
 }
 
-
-export default Api
+export default Api;
