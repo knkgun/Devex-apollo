@@ -58,9 +58,12 @@ TxnTC.addResolver({
 TxnTC.addResolver({
   name: 'findByAddr',
   type: [TxnTC],
-  args: { addr: 'String!' },
+  args: { addr: 'String!', offset: 'Int', limit: 'Int' },
   resolve: async ({ args, context }) => {
     const { addr } = args
+    let { offset, limit } = args;
+    offset = offset || 0;
+    limit = limit || 20;
     const { models: { TxnModel } } = context
     return await TxnModel.find({
       $or: [
@@ -69,7 +72,7 @@ TxnTC.addResolver({
         { 'receipt.transitions.addr': addHexPrefix(addr) },
         { 'receipt.transitions.msg._recipient': addHexPrefix(addr) }
       ]
-    })
+    }).skip(offset).limit(limit);
   }
 })
 
