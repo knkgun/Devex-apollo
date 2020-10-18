@@ -4,8 +4,7 @@ let config
 
 if (process.env.NODE_ENV === 'dev') {
   config = {
-    'database': 'MongoDB',
-    'dbUrl': `mongodb://localhost:27017/`,
+    'dbUrl': `mongodb://localhost:27017/testnew`,
     'mongooseOpts': {
       useUnifiedTopology: true,
       useNewUrlParser: true,

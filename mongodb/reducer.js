@@ -7,12 +7,42 @@ const api = new Api();
 export const txBlockReducer = (txBlock) => {
   return {
     ...txBlock,
-    customId: "txbk_" + txBlock.header.BlockNum,
+    customId: parseInt(txBlock.header.BlockNum),
     txnHashes: txBlock.txnHashes,
   };
 };
 
-export const txnReducer = async (txn) => {
+export const transitionReducer = async (txn) => {
+  let transitions = false;
+  if (txn.receipt.transitions) {
+    transitions = txn.receipt.transitions.map((transition) => {
+      const params = {};
+
+      transition.msg.params.map((p) => {
+        params[p.vname] = p.value;
+        return true;
+      });
+
+      const msg = {
+        _amount: transition.msg._amount,
+        _recipient: transition.msg._recipient,
+        _tag: transition.msg._tag,
+        params: params,
+      };
+
+      return {
+        accepted: transition.accepted,
+        addr: transition.addr,
+        depth: transition.depth,
+        msg,
+      };
+    });
+  }
+
+  return transitions;
+};
+
+export const txnReducer = async (txn, block) => {
   let type = "payment";
 
   if (txn.toAddr === "0000000000000000000000000000000000000000") {
@@ -25,11 +55,41 @@ export const txnReducer = async (txn) => {
     }
   }
 
+  let transitions = [];
+
+  if (txn.receipt.transitions) {
+    transitions = txn.receipt.transitions.map((transition) => {
+      const params = {};
+
+      transition.msg.params.map((p) => {
+        params[p.vname] = p.value;
+        return true;
+      });
+
+      const msg = {
+        _amount: transition.msg._amount,
+        _recipient: transition.msg._recipient,
+        _tag: transition.msg._tag,
+        params: params,
+      };
+
+      return {
+        accepted: transition.accepted,
+        addr: transition.addr,
+        depth: transition.depth,
+        msg,
+      };
+    });
+  }
+
   return {
     ...txn,
-    customId: "txn_" + txn.ID,
-    toAddr: txn.toAddr,
-    fromAddr: pubKeyToHex(txn.senderPubKey),
+    customId: txn.ID,
+    blockId: parseInt(block.header.BlockNum),
+    toAddr: `0x${txn.toAddr}`,
+    fromAddr: `0x${pubKeyToHex(txn.senderPubKey)}`,
     type,
+    timestamp: parseInt(block.header.Timestamp),
+    transitions,
   };
 };

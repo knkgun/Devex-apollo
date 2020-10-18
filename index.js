@@ -3,12 +3,16 @@ import cors from "cors";
 import express from "express";
 import mongoose from "mongoose";
 
-import GQLSchema from "./gql/schema.js";
+import GQLSchema from "./gql/schema2.js";
 import Api from "./datasource/api.js";
 import config from "./config/config.js";
 
-import { txBlockReducer, txnReducer } from "./mongodb/reducer.js";
-import { TxBlockModel, TxnModel } from "./mongodb/model.js";
+import {
+  txBlockReducer,
+  txnReducer,
+  transitionReducer,
+} from "./mongodb/reducer.js";
+import { TxBlockModel, TxnModel, TransitionModel } from "./mongodb/model.js";
 
 const { ApolloServer } = apollo;
 
@@ -46,7 +50,7 @@ const loadData = async (start, end) => {
     try {
       console.log(`Crawling ${blockIndex}`);
       const isCrawled = await TxBlockModel.exists({
-        customId: "txbk_" + blockIndex,
+        customId: blockIndex,
       });
 
       if (isCrawled) {
@@ -71,11 +75,30 @@ const loadData = async (start, end) => {
         reducedTxBlock.header.BlockNum
       );
 
-      const output = await Promise.all(txns.map(async (x) => await txnReducer(x)));
+      const txnsoutput = await Promise.all(
+        txns.map(async (x) => await txnReducer(x, reducedTxBlock))
+      );
 
-      await TxnModel.insertMany(output, { ordered: false });
+      await TxnModel.insertMany(txnsoutput, { ordered: false });
 
-      console.log(`Inserted ${output.length} transactions from block`);
+      console.log(`Inserted ${txnsoutput.length} transactions from block`);
+
+      if (txnsoutput.length) {
+        const transitions = await Promise.all(
+          txnsoutput.flatMap(async (tx) => await transitionReducer(tx))
+        );
+
+        const filteredTransitions = transitions.filter(
+          (item) => item !== false
+        );
+
+
+        await TransitionModel.insertMany(filteredTransitions.flat(), {
+          ordered: false,
+        });
+
+        console.log(`Inserted ${filteredTransitions.length} transitions`);
+      }
     } catch (error) {
       throw error;
     }
@@ -86,12 +109,20 @@ connection.once("open", function () {
   console.log("MongoDB database connection established successfully");
   api.getLatestTxBlock().then((latestBlock) => {
     try {
-      loadData(0, latestBlock - 1);
-      loadData(latestBlock - 1, 0);
-      loadData(parseInt(latestBlock / 3), parseInt(latestBlock / 3) * 1.5);
-      loadData(parseInt(latestBlock / 4), parseInt(latestBlock / 4) * 1.5);
-      loadData(parseInt(latestBlock / 2), parseInt(latestBlock / 2) * 1.5);
-      loadData(parseInt(latestBlock / 1.5), parseInt(latestBlock / 1.5) * 1.5);
+      for (let i = latestBlock; i >= 0; i = i - 20000) {
+        loadData(i, i - 20000);
+      }
+      setInterval(async () => {
+        const latestB = await api.getLatestTxBlock();
+        loadData(latestB - 1, latestB - 10);
+      }, 60000);
+      // loadData(0, latestBlock - 1);
+      //loadData(latestBlock - 1, 1800000);
+      /* loadData(1800000, 1700000);
+      loadData(1700000, 1600000);
+      loadData(1600000, 1500000);
+      loadData(1500000, 1400000);
+      loadData(1400000, 1300000); */
     } catch (error) {
       console.error(error);
       return;
