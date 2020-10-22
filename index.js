@@ -116,7 +116,7 @@ connection.once("open", function () {
         const latestB = await api.getLatestTxBlock();
         loadData(latestB - 1, latestB - 10);
       }, 60000);
-      // loadData(0, latestBlock - 1);
+      loadData(1923980, 1923900);
       //loadData(latestBlock - 1, 1800000);
       /* loadData(1800000, 1700000);
       loadData(1700000, 1600000);

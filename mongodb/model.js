@@ -19,7 +19,7 @@ let TxBlockHeader = new Schema({
   Rewards: String,
   StateDeltaHash: String,
   StateRootHash: String,
-  Timestamp: String,
+  Timestamp: { type: String, index: true },
   Version: Number,
 });
 
@@ -122,7 +122,7 @@ let Txn = new Schema({
   toAddr: String,
   type: String,
   version: String,
-  timestamp: Number,
+  timestamp: { type: Number, index: true },
   blockId: Number,
   transitions: [TxTransition],
 });
