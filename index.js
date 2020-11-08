@@ -48,13 +48,13 @@ const loadData = async (start, end) => {
     start > end ? blockIndex-- : blockIndex++
   ) {
     try {
-      console.log(`Crawling ${blockIndex}`);
+      //console.log(`Crawling ${blockIndex}`);
       const isCrawled = await TxBlockModel.exists({
         customId: blockIndex,
       });
 
       if (isCrawled) {
-        console.log("is Crawled ", blockIndex);
+        //  console.log("is Crawled ", blockIndex);
         continue;
       }
 
@@ -67,7 +67,7 @@ const loadData = async (start, end) => {
       console.log(`inserted block ${reducedTxBlock.header.BlockNum}`);
 
       if (reducedTxBlock.header.NumTxns === 0) {
-        console.log("Block has no transactions.");
+        //  console.log("Block has no transactions.");
         continue;
       }
 
@@ -81,7 +81,7 @@ const loadData = async (start, end) => {
 
       await TxnModel.insertMany(txnsoutput, { ordered: false });
 
-      console.log(`Inserted ${txnsoutput.length} transactions from block`);
+      //console.log(`Inserted ${txnsoutput.length} transactions from block`);
 
       if (txnsoutput.length) {
         const transitions = await Promise.all(
@@ -97,7 +97,7 @@ const loadData = async (start, end) => {
           ordered: false,
         });
 
-        console.log(`Inserted ${filteredTransitions.length} transitions`);
+        // console.log(`Inserted ${filteredTransitions.length} transitions`);
       }
     } catch (error) {
       throw error;
@@ -109,20 +109,18 @@ connection.once("open", function () {
   console.log("MongoDB database connection established successfully");
   api.getLatestTxBlock().then((latestBlock) => {
     try {
-      for (let i = latestBlock; i >= 0; i = i - 20000) {
-        loadData(i, i - 20000);
+
+      loadData(latestBlock - 1, latestBlock - 100);
+
+      for (let i = 0; i <= latestBlock - 1; i = i + 50000) {
+        loadData(i, i + 50000);
       }
+
       setInterval(async () => {
         const latestB = await api.getLatestTxBlock();
-        loadData(latestB - 1, latestB - 10);
+        loadData(latestB - 1, latestB - 100);
       }, 60000);
-      loadData(1923980, 1923900);
-      //loadData(latestBlock - 1, 1800000);
-      /* loadData(1800000, 1700000);
-      loadData(1700000, 1600000);
-      loadData(1600000, 1500000);
-      loadData(1500000, 1400000);
-      loadData(1400000, 1300000); */
+      // loadData(1964715, 1964710);
     } catch (error) {
       console.error(error);
       return;
