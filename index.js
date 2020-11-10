@@ -110,11 +110,8 @@ connection.once("open", function () {
   api.getLatestTxBlock().then((latestBlock) => {
     try {
 
-      loadData(latestBlock - 1, latestBlock - 100);
-
-      for (let i = 0; i <= latestBlock - 1; i = i + 50000) {
-        loadData(i, i + 50000);
-      }
+      loadData(latestBlock - 1, 0);
+      loadData(1, latestBlock);
 
       setInterval(async () => {
         const latestB = await api.getLatestTxBlock();
