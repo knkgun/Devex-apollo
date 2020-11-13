@@ -4,13 +4,14 @@ let config
 
 if (process.env.NODE_ENV === 'dev') {
   config = {
-    'dbUrl': `mongodb://localhost:27017/devex-apollo`,
+    'dbUrl': `mongodb://${process.env.DOCUMENTDB_USER}:${process.env.DOCUMENTDB_PASSWORD}@localhost:27017/devex-apollo`,
     'mongooseOpts': {
       useUnifiedTopology: true,
       useNewUrlParser: true,
       useCreateIndex: true
     }
   }
+  console.log(config);
 } else {
   let CA
   try {
