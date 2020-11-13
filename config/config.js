@@ -4,7 +4,7 @@ let config
 
 if (process.env.NODE_ENV === 'dev') {
   config = {
-    'dbUrl': `mongodb://localhost:27017/testnew`,
+    'dbUrl': `mongodb://localhost:27017/devex-apollo`,
     'mongooseOpts': {
       useUnifiedTopology: true,
       useNewUrlParser: true,
