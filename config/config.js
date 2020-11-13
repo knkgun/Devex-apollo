@@ -4,7 +4,7 @@ let config
 
 if (process.env.NODE_ENV === 'dev') {
   config = {
-    'dbUrl': `mongodb://${process.env.DOCUMENTDB_USER}:${process.env.DOCUMENTDB_PASSWORD}@localhost:27017/devex-apollo`,
+    'dbUrl': `mongodb://${process.env.DOCUMENTDB_USER}:${process.env.DOCUMENTDB_PASSWORD}@localhost:27017/devex-apollo?authSource=admin&readPreference=primary&appname=MongoDB%20Compass%20Community&ssl=false`,
     'mongooseOpts': {
       useUnifiedTopology: true,
       useNewUrlParser: true,
