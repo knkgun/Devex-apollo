@@ -93,7 +93,7 @@ class Api {
     if (!parsedRes.error) return true;
     else if (parsedRes.error.message === "Address not contract address")
       return false;
-    else throw new Error("Invalid Address");
+    else return false;
   }
 }
 
