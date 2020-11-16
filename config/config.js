@@ -11,7 +11,6 @@ if (process.env.NODE_ENV === 'dev') {
       useCreateIndex: true
     }
   }
-  console.log(config);
 } else {
   let CA
   try {
