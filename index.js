@@ -75,30 +75,33 @@ const loadData = async (start, end) => {
         reducedTxBlock.header.BlockNum
       );
 
-      const txnsoutput = await Promise.all(
-        txns.map(async (x) => await txnReducer(x, reducedTxBlock))
-      );
+      if (txns !== undefined) {
+        const txnsoutput = await Promise.all(
+          txns.map(async (x) => await txnReducer(x, reducedTxBlock))
+        );
 
-      await TxnModel.insertMany(txnsoutput, { ordered: false });
+        await TxnModel.insertMany(txnsoutput, { ordered: false });
 
+        if (txnsoutput.length) {
+          const transitions = await Promise.all(
+            txnsoutput.flatMap(async (tx) => await transitionReducer(tx))
+          );
+
+          const filteredTransitions = transitions.filter(
+            (item) => item !== false
+          );
+
+
+          await TransitionModel.insertMany(filteredTransitions.flat(), {
+            ordered: false,
+          });
+
+          // console.log(`Inserted ${filteredTransitions.length} transitions`);
+        }
+      }
       //console.log(`Inserted ${txnsoutput.length} transactions from block`);
 
-      if (txnsoutput.length) {
-        const transitions = await Promise.all(
-          txnsoutput.flatMap(async (tx) => await transitionReducer(tx))
-        );
 
-        const filteredTransitions = transitions.filter(
-          (item) => item !== false
-        );
-
-
-        await TransitionModel.insertMany(filteredTransitions.flat(), {
-          ordered: false,
-        });
-
-        // console.log(`Inserted ${filteredTransitions.length} transitions`);
-      }
     } catch (error) {
       throw error;
     }
