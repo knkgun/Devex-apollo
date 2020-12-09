@@ -27,4 +27,12 @@ connection.once("open", function () {
     TxBlockModel.collection.reIndex(finished => {
         console.log('finished re indexing TxBlockModel');
     });
+
+    TxnModel.collection.getIndexes({full: true}).then(indexes => {
+        console.log("TxnModel indexes:", indexes);
+    }).catch(console.error);
+
+    TxBlockModel.collection.getIndexes({full: true}).then(indexes => {
+        console.log("TxBlockModel indexes:", indexes);
+    }).catch(console.error);
 });
