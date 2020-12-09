@@ -19,11 +19,13 @@ const { ApolloServer } = apollo;
 
 console.log("NODE_ENV: " + process.env.NODE_ENV);
 
+const BLOCKS_PER_REQUEST = process.env.BLOCKS_PER_REQUEST;
+
 // Set up apollo express server
 const app = express();
 app.use(cors());
 
-const api = new Api();
+const api = new Api(process.env.NETWORK_URL);
 
 const server = new ApolloServer({
   schema: GQLSchema,
@@ -46,7 +48,7 @@ const loadData = async (start, end) => {
 
   if (start > end) {
     try {
-      const blocksRange = [...range(start - 50, start)];
+      const blocksRange = [...range(start - BLOCKS_PER_REQUEST, start)];
 
       const txBlocks = await api.getTxBlocks(blocksRange);
 
@@ -75,82 +77,17 @@ const loadData = async (start, end) => {
       await TxBlockModel.insertMany(reducedBlocks, { ordered: false });
       await TxnModel.insertMany(finalTxns, { ordered: false });
     } catch (error) {
-      if (error.code !== 11000) {
+      if (error.code !== 11000) { // 11000 stands for duplicate entry
         console.log(error.message);
       }
     } finally {
-      console.log(`Synced blocks from ${start} to ${start - 50}.`);
+      console.log(`Synced blocks from ${start} to ${start - BLOCKS_PER_REQUEST}.`);
       setTimeout(() => {
-        loadData(start - 50, end);
+        loadData(start - BLOCKS_PER_REQUEST, end);
       }, 5000);
     }
 
   }
-
-  /* for (
-    let blockIndex = start;
-    start > end ? blockIndex >= end : blockIndex <= end;
-    start > end ? blockIndex-- : blockIndex++
-  ) {
-    try {
-      //console.log(`Crawling ${blockIndex}`);
-      const isCrawled = await TxBlockModel.exists({
-        customId: blockIndex,
-      });
-
-      if (isCrawled) {
-        //  console.log("is Crawled ", blockIndex);
-        continue;
-      }
-
-      const txBlock = await api.getTxBlock(blockIndex);
-
-      const reducedTxBlock = txBlockReducer(txBlock);
-
-      const blockInsert = await TxBlockModel.create([reducedTxBlock]);
-
-      console.log(`inserted block ${reducedTxBlock.header.BlockNum}`);
-
-      if (reducedTxBlock.header.NumTxns === 0) {
-        //  console.log("Block has no transactions.");
-        continue;
-      }
-
-      const txns = await api.getTxnBodiesByTxBlock(
-        reducedTxBlock.header.BlockNum
-      );
-
-      if (txns !== undefined) {
-        const txnsoutput = await Promise.all(
-          txns.map(async (x) => await txnReducer(x, reducedTxBlock))
-        );
-
-        await TxnModel.insertMany(txnsoutput, { ordered: false });
-
-        if (txnsoutput.length) {
-          const transitions = await Promise.all(
-            txnsoutput.flatMap(async (tx) => await transitionReducer(tx))
-          );
-
-          const filteredTransitions = transitions.filter(
-            (item) => item !== false
-          );
-
-
-          await TransitionModel.insertMany(filteredTransitions.flat(), {
-            ordered: false,
-          });
-
-          // console.log(`Inserted ${filteredTransitions.length} transitions`);
-        }
-      }
-      //console.log(`Inserted ${txnsoutput.length} transactions from block`);
-
-
-    } catch (error) {
-      throw error;
-    }
-  } */
 };
 
 connection.once("open", function () {
@@ -160,11 +97,10 @@ connection.once("open", function () {
 
       loadData(latestBlock - 1, 0);
 
-      /*   setInterval(async () => {
-          const latestB = await api.getLatestTxBlock();
-          loadData(latestB - 1, latestB - 100);
-        }, 60000); */
-      // loadData(1964715, 1964710);
+      setInterval(async () => {
+        const latestB = await api.getLatestTxBlock();
+        loadData(latestB - 1, latestB - 100);
+      }, 60000);
     } catch (error) {
       console.error(error);
       return;
