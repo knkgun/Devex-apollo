@@ -65,14 +65,14 @@ let EventLogEntry = new Schema({
 
 let TransitionMsg = new Schema({
   _amount: String,
-  _recipient: String,
-  _tag: String,
+  _recipient: { type: String, index: true },
+  _tag: { type: String, index: true },
   params: [EventParam],
 });
 
 let TransitionEntry = new Schema({
   accepted: Boolean,
-  addr: String,
+  addr: { type: String, index: true },
   depth: Number,
   msg: TransitionMsg,
 });
