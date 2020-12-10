@@ -95,7 +95,9 @@ connection.once("open", function () {
   api.getLatestTxBlock().then((latestBlock) => {
     try {
 
-      loadData(latestBlock - 1, 0);
+      if (process.env.FAST_SYNC === true) {
+        loadData(latestBlock - 1, 0);
+      }
 
       setInterval(async () => {
         const latestB = await api.getLatestTxBlock();
