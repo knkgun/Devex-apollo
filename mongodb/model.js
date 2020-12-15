@@ -65,14 +65,14 @@ let EventLogEntry = new Schema({
 
 let TransitionMsg = new Schema({
   _amount: String,
-  _recipient: String,
-  _tag: String,
+  _recipient: { type: String, index: true },
+  _tag: { type: String, index: true },
   params: [EventParam],
 });
 
 let TransitionEntry = new Schema({
   accepted: Boolean,
-  addr: String,
+  addr: { type: String, index: true },
   depth: Number,
   msg: TransitionMsg,
 });
@@ -90,15 +90,15 @@ let TxnReceipt = new Schema({
 
 let TxTransitionMsg = new Schema({
   _amount: String,
-  _recipient: String,
-  _tag: String,
+  _recipient: { type: String, index: true },
+  _tag: { type: String, index: true },
   params: Schema.Types.Mixed,
 });
 
 let TxTransition = new Schema({
   msg: TxTransitionMsg,
   accepted: Boolean,
-  addr: String,
+  addr: { type: String, index: true },
   depth: Number,
 });
 
@@ -118,8 +118,8 @@ let Txn = new Schema({
   receipt: TxnReceipt,
   senderPubKey: String,
   signature: String,
-  fromAddr: String,
-  toAddr: String,
+  fromAddr: { type: String, index: true },
+  toAddr: { type: String, index: true },
   type: String,
   version: String,
   timestamp: { type: Number, index: true },

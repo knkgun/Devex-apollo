@@ -42,17 +42,11 @@ export const transitionReducer = async (txn) => {
   return transitions;
 };
 
-export const txnReducer = async (txn, block) => {
+export const txnReducer = (txn, block) => {
   let type = "payment";
 
   if (txn.toAddr === "0000000000000000000000000000000000000000") {
     type = "contract-creation";
-  } else {
-    const isContract = await api.isContractAddr(txn.toAddr);
-
-    if (isContract) {
-      type = "contract-call";
-    }
   }
 
   let transitions = [];
@@ -85,11 +79,10 @@ export const txnReducer = async (txn, block) => {
   return {
     ...txn,
     customId: txn.ID,
-    blockId: parseInt(block.header.BlockNum),
+    blockId: parseInt(txn.receipt.epoch_num),
     toAddr: `0x${txn.toAddr}`,
     fromAddr: `0x${pubKeyToHex(txn.senderPubKey)}`,
     type,
-    timestamp: parseInt(block.header.Timestamp),
     transitions,
   };
 };

@@ -15,8 +15,8 @@ import zilp from "@zilliqa-js/zilliqa";
 const { Zilliqa } = zilp;
 
 class Api {
-  constructor() {
-    this.networkUrl = "https://dev-api.zilliqa.com/";
+  constructor(networkUrl = "https://api.zilliqa.com/") {
+    this.networkUrl = networkUrl;
     this.Zilliqa = new Zilliqa(this.networkUrl);
   }
 
@@ -56,6 +56,58 @@ class Api {
     return parsedRes.result;
   }
 
+  async checkIfContracts(txns) {
+    const data = txns.map(txn => {
+      return {
+        id: "1",
+        jsonrpc: "2.0",
+        method: "GetSmartContractInit",
+        params: [`${stripHexPrefix(txn.toAddr)}`],
+      }
+    });
+
+    const response = await fetch(this.networkUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    const parsedRes = await response.json();
+
+    return txns.map((txn, index) => {
+      return {
+        ...txn,
+        type: txn.type !== 'contract-creation' && !parsedRes[index].error ? 'contract-call' : 'payment'
+      }
+    });
+  }
+
+
+  async getTxBlocks(blocks) {
+
+    const data = blocks.map(block => {
+      return {
+        id: "1",
+        jsonrpc: "2.0",
+        method: "GetTxBlock",
+        params: [`${block}`],
+      }
+    });
+
+    const response = await fetch(this.networkUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    const parsedRes = await response.json();
+    return parsedRes.map(item => {
+      return item.result
+    });
+  }
   // Get transaction bodies by tx block
   async getTxnBodiesByTxBlock(blockNum) {
     const response = await fetch(this.networkUrl, {
@@ -72,6 +124,31 @@ class Api {
     });
     const parsedRes = await response.json();
     return parsedRes.result;
+  }
+
+  // Get transaction bodies by tx block
+  async getTxnBodiesByTxBlocks(blocks) {
+    const data = blocks.map(block => {
+      return {
+        id: "1",
+        jsonrpc: "2.0",
+        method: "GetTxnBodiesForTxBlock",
+        params: [`${block.header.BlockNum}`],
+      }
+    })
+    const response = await fetch(this.networkUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    const parsedRes = await response.json();
+    const reducedTxs = parsedRes.map(txresult => {
+      return txresult.result;
+    }).flat();
+
+    return reducedTxs;
   }
 
   /* Until we find a better way to differentiate an account address from a smart contract address, we will differentiate based
