@@ -103,9 +103,10 @@ connection.once("open", function () {
       setInterval(async () => {
         const latestBlockInNetwork = await api.getLatestTxBlock();
         TxBlockModel.findOne().sort({ customId: -1 }).limit(1).exec((err, res) => {
-          const latestBlockInDB = 0;
           if(res != null) {
-            latestBlockInDB = res.customId;
+            const latestBlockInDB = res.customId;
+          } else {
+            const latextBlockInDb = 0;
           }
           console.log(`Blocks need to be synced from ${latestBlockInDB} to ${latestBlockInNetwork}`);
           loadData(latestBlockInNetwork - 1, latestBlockInDB);
