@@ -95,19 +95,19 @@ connection.once("open", function () {
   api.getLatestTxBlock().then((latestBlock) => {
     try {
 
-      if (process.env.FAST_SYNC === false) {
-        loadData(latestBlock - 1, 0);
-      }
+      
+      loadData(latestBlock - 1, 0);
+      loadData(855429, 0);
+      loadData(835000, 0);
 
-
-      setInterval(async () => {
+      /* setInterval(async () => {
         const latestBlockInNetwork = await api.getLatestTxBlock();
         TxBlockModel.findOne().sort({ customId: -1 }).limit(1).exec((err, res) => {
           const latestBlockInDB = res.customId;
           console.log(`Blocks need to be synced from ${latestBlockInDB} to ${latestBlockInNetwork}`);
           loadData(latestBlockInNetwork - 1, latestBlockInDB);
         });
-      }, 120000);
+      }, 120000); */
 
     } catch (error) {
       console.error(error);
