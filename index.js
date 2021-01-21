@@ -139,7 +139,7 @@ connection.once("open", function () {
           console.log(`Blocks need to be synced from ${latestBlockInNetwork} to ${latestBlockInDB}`);
           loadData(latestBlockInNetwork, latestBlockInDB);
         });
-      }, 600000);
+      }, 60000);
 
     } catch (error) {
       console.error(error);
