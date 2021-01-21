@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Devex Apollo uses [Apollo Data Graph Platform](https://www.apollographql.com/) to enable qquerying of blockkchain data using GraphQL qquery. 
+Devex Apollo uses [Apollo Data Graph Platform](https://www.apollographql.com/) to enable querying of blockkchain data using GraphQL qquery. 
 
 ## Features
 
