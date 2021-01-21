@@ -21,7 +21,7 @@ TxTC.addResolver({
     const {
       models: { TxnModel },
     } = context;
-    return await TxnModel.find({ customId: customId });
+    return await TxnModel.find({ customId: customId }).maxTime(30000);
   },
 });
 
