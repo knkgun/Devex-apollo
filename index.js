@@ -45,10 +45,14 @@ mongoose.connect(config.dbUrl, { ...config.mongooseOpts });
 let connection = mongoose.connection;
 
 const loadData = async (start, end) => {
-
+  let blocksPerRequest = BLOCKS_PER_REQUEST;
   if (start > end) {
+    if (start - blocksPerRequest < end) {
+      blocksPerRequest = start - end;
+    }
+    console.log(`Trying to sync from ${start} to ${start - blocksPerRequest}...`);
     try {
-      const blocksRange = [...range(start - BLOCKS_PER_REQUEST, start)];
+      const blocksRange = [...range(start - blocksPerRequest, start)];
 
       const txBlocks = await api.getTxBlocks(blocksRange);
 
@@ -73,20 +77,49 @@ const loadData = async (start, end) => {
         }
       })
 
+      const finalBlocksAdded = await new Promise((resolve, reject) =>
+        TxBlockModel.insertMany(reducedBlocks, { ordered: false }, function (err, result) {
+          if (err) {
+            if (err.code === 11000) {
+              resolve(err.result.result.insertedIds);
+            } else {
+              reject(err);
+            }
+          }
+          resolve(result);    // Otherwise resolve
+        })
+      )
 
-      await TxBlockModel.insertMany(reducedBlocks, { ordered: false });
-      await TxnModel.insertMany(finalTxns, { ordered: false });
+      const finalTxsAdded = await new Promise((resolve, reject) =>
+        TxnModel.insertMany(finalTxns, { ordered: false }, function (err, result) {
+          if (err) {
+            if (err.code === 11000) {
+              resolve(err.result.result.insertedIds);
+            } else {
+              reject(err);
+            }
+          }
+          resolve(result);    // Otherwise resolve
+        })
+      )
+
+      console.log(`Added ${finalTxsAdded.length}/${finalTxns.length} txs and ${finalBlocksAdded.length}/${reducedBlocks.length} blocks.`);
+
     } catch (error) {
       if (error.code !== 11000) { // 11000 stands for duplicate entry
         console.log(error.message);
       }
     } finally {
-      console.log(`Synced blocks from ${start} to ${start - BLOCKS_PER_REQUEST}.`);
-      setTimeout(() => {
-        loadData(start - BLOCKS_PER_REQUEST, end);
-      }, 5000);
+      console.log(`Synced blocks from ${start} to ${start - blocksPerRequest}.`);
+      if (start - blocksPerRequest > end) {
+        setTimeout(() => {
+          loadData(start - BLOCKS_PER_REQUEST, end);
+        }, 5000);
+      }
     }
 
+  } else {
+    console.log(`${end} is lower than ${start}`);
   }
 };
 
@@ -99,15 +132,14 @@ connection.once("open", function () {
         loadData(latestBlock - 1, 0);
       }
 
-
       setInterval(async () => {
         const latestBlockInNetwork = await api.getLatestTxBlock();
-        TxBlockModel.findOne().sort({ customId: -1 }).limit(1).exec((err, res) => {
+        TxBlockModel.findOne({ customId: { $lt: 20000000 } }).sort({ customId: -1 }).limit(1).exec((err, res) => {
           const latestBlockInDB = (res == null) ? 0 : res.customId;
-          console.log(`Blocks need to be synced from ${latestBlockInDB} to ${latestBlockInNetwork}`);
-          loadData(latestBlockInNetwork - 1, latestBlockInDB);
+          console.log(`Blocks need to be synced from ${latestBlockInNetwork} to ${latestBlockInDB}`);
+          loadData(latestBlockInNetwork, latestBlockInDB);
         });
-      }, 120000);
+      }, 600000);
 
     } catch (error) {
       console.error(error);
