@@ -10,5 +10,19 @@ services:
     volumes:
       - mongodb_data_container2:/data/db
 
+  devex-server:
+    build: .
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DOCUMENTDB_HOST: ${DOCUMENTDB_HOST}
+      DOCUMENTDB_PORT: ${DOCUMENTDB_PORT}
+      DOCUMENTDB_DB: ${DOCUMENTDB_DB}
+      DOCUMENTDB_USER: ${DOCUMENTDB_USER}
+      DOCUMENTDB_PASSWORD: ${DOCUMENTDB_PASSWORD}
+      NETWORK_URL: ${NETWORK_URL}
+      BLOCKS_PER_REQUEST: ${BLOCKS_PER_REQUEST}
+      FAST_SYNC: ${FAST_SYNC}
+    ports:
+      - 5000:5000
 volumes:
   mongodb_data_container2:
